@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kube-system # Cilium typically runs in kube-system
+
+helmCharts:
+- name: cilium
+  repo: https://helm.cilium.io/
+  version: "1.15.5" # Use a specific, recent version compatible with your K8s/Talos
+  releaseName: cilium
+  namespace: kube-system
+  # Values specific to Talos integration might be needed here
+  # See: https://www.talos.dev/v1.7/kubernetes-guides/network/deploying-cilium/
+  valuesInline:
+    # Example values - adjust based on Talos documentation and your needs
+    kubeProxyReplacement: strict # Recommended for Talos
+    k8sServiceHost: "127.0.0.1" # Control plane endpoint within the node
+    k8sServicePort: 7443       # Talos API port
+    # operator:
+    #   replicas: 1 # Adjust if needed for HA control plane
+    # Add other necessary Cilium values

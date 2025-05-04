@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base/cilium
+- ../../base/cert-manager
+- infra-namespace.yaml
+
+# Patches or other overlay-specific configurations can be added here
+# For example, patching cert-manager to use a specific ClusterIssuer
+
+# Ensure cert-manager resources go into the 'infra' namespace if desired
+# Note: The helm chart itself deploys to 'cert-manager' by default.
+# If you want everything in 'infra', you'd need to adjust the base or patch.
+patches:
+- target:
+    kind: Kustomization
+    annotationSelector: kustomize.config.k8s.io/annotation=cert-manager-patch # Add this annotation to cert-manager base if needed
+  patch: |-
+    - op: replace
+      path: /namespace
+      value: infra
+- target:
+    kind: HelmChart # Target the HelmChart resource itself
+    name: cert-manager # Match the name defined in the base
+  patch: |-
+    - op: replace
+      path: /namespace
+      value: infra # Change the Helm release namespace
+    - op: add # Add a value to change the namespace within the chart's templates
+      path: /valuesInline/namespace
+      value: infra
+
+# Note: Overriding Helm chart namespaces like this can sometimes be tricky.
+# It might be cleaner to configure the namespace directly in the base kustomization's helmChart definition.
+# The above patch attempts to force it into the 'infra' namespace.
